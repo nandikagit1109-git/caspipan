@@ -40,12 +40,13 @@ print("🚀 Quantum Odyssey Running...")
 print("Waiting for messages...\n")
 
 
+from xp import add_xp, get_level
+from database import save_chat
+from ai import get_ai_response
+from missions import get_mission
+
 @client.on_message
 def handle(message):
-
-    print("\nNew Message")
-    print("User :", message.sender)
-    print("Text :", message.text)
 
     user = (
         message.sender["address"]
@@ -53,20 +54,68 @@ def handle(message):
         else str(message.sender)
     )
 
-    save_chat(user, "USER", message.text)
+    text = message.text.strip()
+
+    # ---------------- HELP ----------------
+    if text.lower() == "/help":
+
+        message.reply("""
+🌌 Quantum Odyssey Commands
+
+/help              → Show commands
+/xp                → Check XP & Level
+/mission           → Get today's mission
+
+Just ask any study question naturally!
+
+Examples:
+• Explain Python loops
+• Quiz me on AI
+• What is Machine Learning?
+""")
+        return
+
+    # ---------------- XP ----------------
+    if text.lower() == "/xp":
+
+        xp = add_xp(user) - 10   # display current XP without awarding extra
+
+        level = get_level(xp)
+
+        message.reply(
+            f"""⭐ Your Progress
+
+XP : {xp}
+
+🏆 Level : {level}
+"""
+        )
+        return
+
+    # ---------------- MISSION ----------------
+    if text.lower() == "/mission":
+
+        message.reply(get_mission())
+        return
+
+    # ---------------- NORMAL AI ----------------
+
+    save_chat(user, "USER", text)
 
     xp = add_xp(user)
 
-    reply = get_ai_response(message.text)
+    level = get_level(xp)
+
+    reply = get_ai_response(text)
 
     save_chat(user, "AI", reply)
 
-    final_reply = f"""{reply}
+    message.reply(
+        f"""{reply}
 
 ━━━━━━━━━━━━━━
 ⭐ XP : {xp}
+🏆 Level : {level}
 """
-
-    message.reply(final_reply)
-
+    )
 client.listen()

@@ -1,11 +1,12 @@
 import os
+from unittest import result
+from urllib import response
 import requests
 
 API_KEY = os.getenv("FEATHERLESS_API_KEY")
 
 # CHANGE THIS LATER IF NEEDED
-MODEL = "meta-llama/Llama-3.1-8B-Instruct"
-
+MODEL = "Qwen/Qwen3-8B"
 
 def get_ai_response(prompt):
 
@@ -19,36 +20,38 @@ def get_ai_response(prompt):
         "messages": [
             {
                 "role": "system",
-                "content":
-                """
+                "content": """
 You are Quantum Odyssey.
 
-You are an AI mentor.
+You are a friendly AI mentor for students.
 
-You teach:
-Python
-C++
-Java
-AI
-Machine Learning
-Quantum Computing
-DSA
+Your job is to help students learn:
 
-Always explain in simple language.
+• Python
+• C++
+• Java
+• Data Structures & Algorithms
+• Artificial Intelligence
+• Machine Learning
+• Quantum Computing
 
-Keep answers concise but useful.
-"""
-            },
+Rules:
+
+1. Explain concepts step by step.
+2. Use simple language.
+3. Give examples whenever possible.
+4. End every answer with one practice question.
+5. Encourage the student to keep learning.
+6. Keep answers concise but informative.
+"""            },
             {
                 "role": "user",
                 "content": prompt
             }
-        ],
-        "temperature": 0.7
+        ]
     }
 
     try:
-
         response = requests.post(
             "https://api.featherless.ai/v1/chat/completions",
             headers=headers,
@@ -56,10 +59,16 @@ Keep answers concise but useful.
             timeout=60
         )
 
+        print("STATUS:", response.status_code)
+
         result = response.json()
 
-        return result["choices"][0]["message"]["content"]
+        print("FULL RESPONSE:", result)
+
+        if "choices" in result:
+            return result["choices"][0]["message"]["content"]
+        else:
+            return str(result)
 
     except Exception as e:
-
-        return f"Error:\n{e}"
+        return f"Error: {e}"
