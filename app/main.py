@@ -1,121 +1,313 @@
-from email.mime import message
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
-
 from caspian_sdk import CommClient
+from app.ai import get_ai_response
+from app.xp import add_xp, get_xp, get_level
+from app.database import init_db, save_chat
+from app.badges import get_badge
+from app.streak import init_streak, update_streak
+from app.commands import handle_command
 
-from ai import get_ai_response
-from xp import add_xp
-from database import init_db, save_chat
 
-# Load .env
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+# ==========================================================
+# ENVIRONMENT
+# ==========================================================
 
-# Initialize database
+load_dotenv(
+    Path(__file__).resolve().parent.parent / ".env"
+)
+
+
+# ==========================================================
+# DATABASE
+# ==========================================================
+
 init_db()
+init_streak()
 
-# Create Caspian client
+
+# ==========================================================
+# CASPIAN
+# ==========================================================
+
 client = CommClient()
 
-# -------------------------
-# EMAIL
-# -------------------------
-email = client.connect_email(username="quantumodyssey")
-print(f"📧 Email Connected: {email['address']}")
 
-# -------------------------
+# ==========================================================
+# EMAIL
+# ==========================================================
+
+try:
+
+    email = client.connect_email(
+        username="quantumodyssey"
+    )
+
+    print(
+        f"📧 Email Connected: {email['address']}"
+    )
+
+except Exception as e:
+
+    print("❌ Email Error:", e)
+
+
+# ==========================================================
 # DISCORD
-# -------------------------
-discord_token = os.getenv("DISCORD_BOT_TOKEN")
+# ==========================================================
+
+discord_token = os.getenv(
+    "DISCORD_BOT_TOKEN"
+)
 
 if discord_token:
+
     try:
-        client.connect_discord(bot_token=discord_token)
+
+        client.connect_discord(
+            bot_token=discord_token
+        )
+
         print("💬 Discord Connected")
+
     except Exception as e:
-        print("Discord Error:", e)
 
+        print("❌ Discord Error:", e)
+
+
+# ==========================================================
+# START
+# ==========================================================
+
+print()
 print("🚀 Quantum Odyssey Running...")
-print("Waiting for messages...\n")
+print("🧠 AI Mentor: Online")
+print("⭐ XP System: Online")
+print("🏆 Badges: Online")
+print("🔥 Streaks: Online")
+print("📚 Learning Tools: Online")
+print()
+print("Waiting for messages...")
+print()
 
 
-from xp import add_xp, get_level
-from database import save_chat
-from ai import get_ai_response
-from missions import get_mission
+# ==========================================================
+# MESSAGE HANDLER
+# ==========================================================
 
 @client.on_message
 def handle(message):
 
-    user = (
-        message.sender["address"]
-        if isinstance(message.sender, dict)
-        else str(message.sender)
-    )
+    try:
 
-    text = message.text.strip()
+        # --------------------------------------------------
+        # USER
+        # --------------------------------------------------
 
-    # ---------------- HELP ----------------
-    if text.lower() == "/help":
+        if isinstance(message.sender, dict):
 
-        message.reply("""
-🌌 Quantum Odyssey Commands
+            user = (
+                message.sender.get("address")
+                or message.sender.get("name")
+                or "unknown-user"
+            )
 
-/help              → Show commands
-/xp                → Check XP & Level
-/mission           → Get today's mission
+        else:
 
-Just ask any study question naturally!
+            user = str(message.sender)
 
-Examples:
-• Explain Python loops
-• Quiz me on AI
-• What is Machine Learning?
-""")
-        return
 
-    # ---------------- XP ----------------
-    if text.lower() == "/xp":
+        # --------------------------------------------------
+        # TEXT
+        # --------------------------------------------------
 
-        xp = add_xp(user) - 10   # display current XP without awarding extra
+        text = (
+            message.text.strip()
+            if message.text
+            else ""
+        )
+        if not text:
+            return
 
-        level = get_level(xp)
+
+        if not text:
+
+            return
+
+
+        print()
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print(f"📩 User: {user}")
+        print(f"💬 Message: {text}")
+
+
+        # ==================================================
+        # COMMAND
+        # ==================================================
+
+        command = handle_command(
+            user,
+            text
+        )
+
+
+        if command:
+
+            # ----------------------------------------------
+            # NORMAL REPLY
+            # ----------------------------------------------
+
+            if command["type"] == "reply":
+
+                message.reply(
+                    command["text"]
+                )
+
+                return
+
+
+            # ----------------------------------------------
+            # AI COMMAND
+            # ----------------------------------------------
+
+            if command["type"] == "ai":
+
+                save_chat(
+                    user,
+                    "USER",
+                    text
+                )
+
+                reply = get_ai_response(
+                    user,
+                    command["prompt"]
+                )
+
+                save_chat(
+                    user,
+                    "AI",
+                    reply
+                )
+
+                xp = add_xp(
+                    user,
+                    20
+                )
+
+                level = get_level(xp)
+
+                badge = get_badge(xp)
+
+                streak = update_streak(
+                    user
+                )
+
+                prefix = command.get(
+                    "prefix",
+                    ""
+                )
+
+                message.reply(
+                    f"""{prefix}{reply}
+
+━━━━━━━━━━━━━━━━━━
+
+⭐ XP: {xp}
+🏆 Level: {level}
+🎖 Badge: {badge}
+🔥 Streak: {streak} day(s)
+"""
+                )
+
+                return
+
+
+        # ==================================================
+        # NORMAL AI CHAT
+        # ==================================================
+
+        save_chat(
+            user,
+            "USER",
+            text
+        )
+
+        reply = get_ai_response(
+            user,
+            text
+        )
+
+        save_chat(
+            user,
+            "AI",
+            reply
+        )
+
+
+        # --------------------------------------------------
+        # REWARD
+        # --------------------------------------------------
+
+        xp = add_xp(
+            user,
+            10
+        )
+
+        level = get_level(
+            xp
+        )
+
+        badge = get_badge(
+            xp
+        )
+
+        streak = update_streak(
+            user
+        )
+
+
+        # --------------------------------------------------
+        # RESPONSE
+        # --------------------------------------------------
 
         message.reply(
-            f"""⭐ Your Progress
+            f"""{reply}
 
-XP : {xp}
+━━━━━━━━━━━━━━━━━━
 
-🏆 Level : {level}
+⭐ XP: {xp}
+🏆 Level: {level}
+🎖 Badge: {badge}
+🔥 Streak: {streak} day(s)
 """
         )
-        return
 
-    # ---------------- MISSION ----------------
-    if text.lower() == "/mission":
 
-        message.reply(get_mission())
-        return
+        print("✅ Reply sent")
 
-    # ---------------- NORMAL AI ----------------
 
-    save_chat(user, "USER", text)
+    except Exception as e:
 
-    xp = add_xp(user)
+        print(
+            "❌ Handler Error:",
+            repr(e)
+        )
 
-    level = get_level(xp)
+        try:
 
-    reply = get_ai_response(text)
+            message.reply(
+                f"❌ Something went wrong: {e}"
+            )
 
-    save_chat(user, "AI", reply)
+        except Exception:
 
-    message.reply(
-        f"""{reply}
+            pass
 
-━━━━━━━━━━━━━━
-⭐ XP : {xp}
-🏆 Level : {level}
-"""
-    )
+
+# ==========================================================
+# LISTEN
+# ==========================================================
+
 client.listen()

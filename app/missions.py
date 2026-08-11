@@ -1,28 +1,29 @@
 import random
 
+
 MISSIONS = [
-
-    "📘 Learn Python loops today.",
-
-    "💻 Solve 2 DSA questions.",
-
-    "🤖 Read one AI article.",
-
-    "⚛ Learn one Quantum Computing concept.",
-
-    "📚 Practice Python for 30 minutes.",
-
-    "🧠 Revise Object-Oriented Programming."
-
+    "📘 Learn one new Python concept.",
+    "💻 Solve two programming problems.",
+    "🤖 Learn one Artificial Intelligence concept.",
+    "🧠 Revise something you learned yesterday.",
+    "⚛️ Learn one Quantum Computing concept.",
+    "📚 Study for 30 focused minutes.",
+    "🚀 Build a tiny programming project.",
+    "🔍 Read about one new technology."
 ]
 
+
 def get_mission():
+    mission = random.choice(MISSIONS)
 
-    return f"""🎯 Today's Mission
+    return f"""
+🎯 TODAY'S MISSION
 
-{random.choice(MISSIONS)}
+{mission}
 
-Reward
-⭐ +50 XP
-🏆 Mission Badge
+━━━━━━━━━━━━━━━━━━
+
+⭐ Reward: +50 XP
+
+Complete it and keep your learning streak alive! 🔥
 """
