@@ -78,22 +78,17 @@ XP: {xp}
 """
         }
 
-    # MISSION
+  # MISSION
     if lower == "/mission":
 
         return {
-            "type": "reply",
-            "text": get_mission()
-        }
-
-    # LEADERBOARD
-    if lower == "/leaderboard":
-
-        return {
-            "type": "reply",
-            "text": format_leaderboard()
-        }
-
+        "type": "reply",
+        "text": (
+            "🎯 Today's mission:\n"
+            "Learn one Quantum Computing concept.\n\n"
+            "Reward: +50 XP"
+        )
+    }
     # QUIZ
     if lower.startswith("/quiz"):
 
@@ -267,20 +262,26 @@ Format:
          topic = text[len("/next"):].strip()
 
         if not topic:
-            topic = "Python"
+         topic = "Python"
 
-        score = get_average_score(user, topic)
+        score = get_average_score(
+        user,
+        topic
+    )
 
         if score is None:
-            score = 50
+         score = 50
 
-        prompt = adaptive_prompt(topic, score)
+        prompt = adaptive_prompt(
+        topic,
+        score
+    )
 
         return {
-            "type": "ai",
-            "prompt": prompt,
-            "prefix": "🎯 NEXT CHALLENGE\n\n"
-        }
+        "type": "ai",
+        "prompt": prompt,
+        "prefix": f"🎯 Here's your next {topic} challenge:\n\n"
+    }
             # ==================================================
     # NOTIFICATION TEST
     # ==================================================
@@ -398,22 +399,14 @@ Rules:
                # ==================================================
     # LEARNER PROFILE
     # ==================================================
+        if lower == "/xp":
 
-        if lower == "/profile":
-
-         xp = get_xp(user)
-        level = get_level(xp)
-        badge = get_badge(xp)
+               xp = get_xp(user)
 
         return {
-            "type": "reply",
-            "text": f"""🌌 QUANTUM PROFILE
-
-⭐ XP: {xp}
-🏆 Level: {level}
-🎖 Badge: {badge}
-"""
-        }
+        "type": "reply",
+        "text": f"⭐ You have {xp} XP."
+    }
             # ==================================================
     # SMART LEARNING ALERT
     # ==================================================
