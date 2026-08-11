@@ -3,6 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from caspian_sdk import CommClient
+
 from app.ai import get_ai_response
 from app.xp import add_xp, get_xp, get_level
 from app.database import init_db, save_chat
@@ -40,7 +41,6 @@ client = CommClient()
 # ==========================================================
 
 try:
-
     email = client.connect_email(
         username="quantumodyssey"
     )
@@ -50,7 +50,6 @@ try:
     )
 
 except Exception as e:
-
     print("❌ Email Error:", e)
 
 
@@ -58,23 +57,29 @@ except Exception as e:
 # DISCORD
 # ==========================================================
 
-discord_token = os.getenv(
-    "DISCORD_BOT_TOKEN"
-)
+discord_token = os.getenv("DISCORD_BOT_TOKEN")
 
 if discord_token:
-
     try:
-
-        client.connect_discord(
+        discord = client.connect_discord(
             bot_token=discord_token
         )
 
         print("💬 Discord Connected")
+        print(
+            "DISCORD CONNECTION ID:",
+            discord.get("id")
+        )
+        print(
+            "DISCORD STATUS:",
+            discord.get("status")
+        )
 
     except Exception as e:
-
         print("❌ Discord Error:", e)
+
+else:
+    print("⚠️ DISCORD_BOT_TOKEN not found")
 
 
 # ==========================================================
@@ -100,6 +105,8 @@ print()
 @client.on_message
 def handle(message):
 
+    print("🔥 MESSAGE RECEIVED FROM CASPIAN")
+
     try:
 
         # --------------------------------------------------
@@ -115,7 +122,6 @@ def handle(message):
             )
 
         else:
-
             user = str(message.sender)
 
 
@@ -128,14 +134,14 @@ def handle(message):
             if message.text
             else ""
         )
+
         if not text:
             return
 
 
-        if not text:
-
-            return
-
+        # --------------------------------------------------
+        # DEBUG
+        # --------------------------------------------------
 
         print()
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -164,6 +170,8 @@ def handle(message):
                 message.reply(
                     command["text"]
                 )
+
+                print("✅ Command reply sent")
 
                 return
 
@@ -196,9 +204,13 @@ def handle(message):
                     20
                 )
 
-                level = get_level(xp)
+                level = get_level(
+                    xp
+                )
 
-                badge = get_badge(xp)
+                badge = get_badge(
+                    xp
+                )
 
                 streak = update_streak(
                     user
@@ -220,6 +232,8 @@ def handle(message):
 🔥 Streak: {streak} day(s)
 """
                 )
+
+                print("✅ AI command reply sent")
 
                 return
 
@@ -284,7 +298,6 @@ def handle(message):
 """
         )
 
-
         print("✅ Reply sent")
 
 
@@ -302,7 +315,6 @@ def handle(message):
             )
 
         except Exception:
-
             pass
 
 
